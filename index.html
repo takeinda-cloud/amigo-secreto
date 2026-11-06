@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amigo Secreto de Natal 🎄</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    min-height:100vh;
+    padding:30px;
+    background:linear-gradient(
+        135deg,
+        #b71c1c,
+        #d32f2f,
+        #1b5e20,
+        #2e7d32
+    );
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:rgba(255,255,255,.95);
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+    color:#b71c1c;
+}
+
+textarea{
+    width:100%;
+    height:220px;
+    padding:12px;
+    border-radius:10px;
+    border:2px solid #2e7d32;
+    resize:vertical;
+    font-size:15px;
+}
+
+button{
+    border:none;
+    cursor:pointer;
+}
+
+.btn{
+    background:#c62828;
+    color:white;
+    padding:12px 20px;
+    border-radius:8px;
+    margin-top:15px;
+    font-weight:bold;
+}
+
+.btn:hover{
+    background:#a51c1c;
+}
+
+.participante{
+    background:white;
+    border-left:5px solid #c62828;
+    border-radius:10px;
+    padding:15px;
+    margin-top:12px;
+}
+
+.link{
+    word-break:break-all;
+    margin:10px 0;
+    color:#1565c0;
+}
+
+.copy{
+    background:#1b5e20;
+    color:white;
+    padding:8px 12px;
+    border-radius:6px;
+    margin-right:6px;
+}
+
+.whats{
+    background:#25d366;
+    color:white;
+    text-decoration:none;
+    padding:10px 12px;
+    border-radius:6px;
+}
+
+.resultado{
+    text-align:center;
+    margin-top:20px;
+}
+
+.nome-amigo{
+    font-size:40px;
+    color:#c62828;
+    font-weight:bold;
+    margin-top:15px;
+}
+
+footer{
+    text-align:center;
+    color:#666;
+    margin-top:30px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div id="sorteio" class="card">
+
+    <h1>🎄 Amigo Secreto 🎁</h1>
+
+    <p>
+        Digite um participante por linha:
+    </p>
+
+    <br>
+
+    <textarea id="nomes"
+placeholder="João
+Maria
+Pedro
+Ana"></textarea>
+
+    <button class="btn" onclick="realizarSorteio()">
+        🎅 Sortear
+    </button>
+
+    <div id="links"></div>
+
+</div>
+
+<div id="resultadoPagina"
+     class="card"
+     style="display:none">
+
+    <h1>🎁 Seu Amigo Secreto</h1>
+
+    <div id="resultado"></div>
+
+</div>
+
+</div>
+
+<script>
+
+function embaralhar(array){
+
+    const novo = [...array];
+
+    for(let i = novo.length - 1; i > 0; i--){
+
+        const j = Math.floor(
+            Math.random() * (i + 1)
+        );
+
+        [novo[i], novo[j]] =
+        [novo[j], novo[i]];
+    }
+
+    return novo;
+}
+
+function copiar(texto){
+
+    navigator.clipboard.writeText(texto);
+
+    alert("Link copiado!");
+}
+
+function codificar(obj){
+
+    return btoa(
+        encodeURIComponent(
+            JSON.stringify(obj)
+        )
+    );
+}
+
+function decodificar(str){
+
+    return JSON.parse(
+        decodeURIComponent(
+            atob(str)
+        )
+    );
+}
+
+function realizarSorteio(){
+
+    const participantes =
+    document
+    .getElementById("nomes")
+    .value
+    .split("\n")
+    .map(x => x.trim())
+    .filter(Boolean);
+
+    if(participantes.length < 3){
+
+        alert(
+            "Informe pelo menos 3 participantes."
+        );
+
+        return;
+    }
+
+    let sorteados;
+    let tentativas = 0;
+
+    do{
+
+        sorteados =
+        embaralhar(participantes);
+
+        tentativas++;
+
+    }while(
+
+        participantes.some(
+            (p,i) =>
+            p === sorteados[i]
+        )
+        &&
+        tentativas < 1000
+
+    );
+
+    let html =
+    "<h2 style='margin-top:25px'>Links Gerados</h2>";
+
+    participantes.forEach((nome,index)=>{
+
+        const payload = {
+
+            participante:nome,
+            amigo:sorteados[index]
+
+        };
+
+        const codigo =
+        codificar(payload);
+
+        const link =
+        location.origin +
+        location.pathname +
+        "?r=" +
+        codigo;
+
+        const mensagem =
+`🎄 Olá ${nome}!
+
+O sorteio do amigo secreto foi realizado.
+
+Clique no link abaixo para descobrir quem você tirou:
+
+${link}
+
+🎁 Feliz Natal!`;
+
+        const whatsapp =
+        "https://wa.me/?text=" +
+        encodeURIComponent(mensagem);
+
+        html += `
+        <div class="participante">
+
+            <strong>${nome}</strong>
+
+            <div class="link">
+                ${link}
+            </div>
+
+            <button
+                class="copy"
+                onclick="copiar('${link}')">
+                📋 Copiar
+            </button>
+
+            <a
+                class="whats"
+                target="_blank"
+                href="${whatsapp}">
+                📱 WhatsApp
+            </a>
+
+        </div>
+        `;
+    });
+
+    document.getElementById(
+        "links"
+    ).innerHTML = html;
+}
+
+(function(){
+
+    const params =
+    new URLSearchParams(
+        location.search
+    );
+
+    const resultado =
+    params.get("r");
+
+    if(!resultado){
+        return;
+    }
+
+    try{
+
+        const dados =
+        decodificar(resultado);
+
+        document.getElementById(
+            "sorteio"
+        ).style.display = "none";
+
+        document.getElementById(
+            "resultadoPagina"
+        ).style.display = "block";
+
+        document.getElementById(
+            "resultado"
+        ).innerHTML = `
+            <div class="resultado">
+                <p>Você tirou:</p>
+
+                <div class="nome-amigo">
+                    ${dados.amigo}
+                </div>
+
+                <footer>
+                    🎄 Feliz Natal! 🎁
+                </footer>
+            </div>
+        `;
+
+    }catch(error){
+
+        document.body.innerHTML =
+        "<h2>Link inválido.</h2>";
+    }
+
+})();
+</script>
+
+</body>
+</html>
